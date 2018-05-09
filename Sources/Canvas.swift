@@ -45,17 +45,18 @@ class Canvas: NSView {
         redPath.fill()
         
         
+        //collision detection
+        
+        //only if the blue and red projectile have been shot, should we check
         if let blueWasShot = blueHasBeenShot, blueWasShot == true {
-            
             if let redWasShot = redHasBeenShot, redWasShot == true {
                 
                 blueHasBeenShot = false
                 redHasBeenShot = false
         
-            //collision detection
-            if (redRect.intersects(blueRect)){
-                canvasDelegate.presentCollisionAlert()
-            }
+                if (redRect.intersects(blueRect)){
+                    canvasDelegate.presentCollisionAlert()
+                }
             }
         }
     }

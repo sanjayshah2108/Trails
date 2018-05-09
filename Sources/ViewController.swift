@@ -20,8 +20,6 @@ class ViewController: NSViewController, CanvasDelegate {
     @IBOutlet weak var axRedTextField: NSTextField!
     @IBOutlet weak var ayRedTextField: NSTextField!
     
-    
-    
     @IBOutlet weak var canvas: Canvas!
 
     /// The models object representing the projectiles.
@@ -32,14 +30,15 @@ class ViewController: NSViewController, CanvasDelegate {
     var lastUpdate = Date.distantPast
 
     /// Update timer.
-    weak var timer: Timer?
+    weak var blueTimer: Timer?
+    weak var redTimer: Timer?
 
     @IBAction func shoot(_ sender: NSButton) {
         blueProjectile.position = .zero
         blueProjectile.velocity = CGVector(dx: vxBlueTextField.doubleValue, dy: vyBlueTextField.doubleValue)
         blueProjectile.acceleration = CGVector(dx: axBlueTextField.doubleValue, dy: ayBlueTextField.doubleValue)
         
-        timer = Timer.scheduledTimer(timeInterval: updateInterval, target: self, selector: #selector(updateBlue), userInfo: nil, repeats: true)
+        blueTimer = Timer.scheduledTimer(timeInterval: updateInterval, target: self, selector: #selector(update), userInfo: nil, repeats: true)
         
         blueHasBeenShot = true
     }
@@ -50,60 +49,53 @@ class ViewController: NSViewController, CanvasDelegate {
         redProjectile.velocity = CGVector(dx: vxBlueTextField.doubleValue, dy: vyBlueTextField.doubleValue)
         redProjectile.acceleration = CGVector(dx: axBlueTextField.doubleValue, dy: ayBlueTextField.doubleValue)
         
-        timer = Timer.scheduledTimer(timeInterval: updateInterval, target: self, selector: #selector(updateBlue), userInfo: nil, repeats: true)
+        redTimer = Timer.scheduledTimer(timeInterval: updateInterval, target: self, selector: #selector(update), userInfo: nil, repeats: true)
         
         redHasBeenShot = true
     }
     
     /// Perform an update by stepping the physics forward.
-    @objc func updateBlue() {
+    @objc func update() {
         
         canvas.canvasDelegate = self
-        
+
         let date = Date()
         let Δt = date.timeIntervalSince(lastUpdate)
         lastUpdate = date
-
+        
         if Δt > 0.5 {
             // Avoid big time gaps
             return
         }
-        
-        blueProjectile.step(Δt: CGFloat(Δt))
-        canvas.blueProjectile = blueProjectile
+    
+        updateRed(t:Δt)
+        updateBlue(t:Δt)
+    }
+    
+    /// Perform an update by stepping the physics forward.
+    @objc func updateRed(t: TimeInterval) {
 
-        if !canvas.bounds.contains(blueProjectile.position) {
-            timer?.invalidate()
-        }
-        
-        redProjectile.step(Δt: CGFloat(Δt))
+        redProjectile.step(Δt: CGFloat(t))
         canvas.redProjectile = redProjectile
         
         if !canvas.bounds.contains(redProjectile.position) {
-            timer?.invalidate()
+            blueTimer?.invalidate()
         }
+    }
+    
+    /// Perform an update by stepping the physics forward.
+    @objc func updateBlue(t: TimeInterval) {
+    
+        blueProjectile.step(Δt: CGFloat(t))
+        canvas.blueProjectile = blueProjectile
         
+        if !canvas.bounds.contains(blueProjectile.position) {
+            redTimer?.invalidate()
+        }
         
     }
     
-    @objc func updateRed() {
-        let date = Date()
-        let Δt = date.timeIntervalSince(lastUpdate)
-        lastUpdate = date
-        
-        if Δt > 0.5 {
-            // Avoid big time gaps
-            return
-        }
-        
-        
-        redProjectile.step(Δt: CGFloat(Δt))
-        canvas.redProjectile = redProjectile
-        
-        if !canvas.bounds.contains(redProjectile.position) {
-            timer?.invalidate()
-        }
-    }
+
     
     func presentCollisionAlert(){
         let alert = NSAlert()
@@ -116,7 +108,15 @@ class ViewController: NSViewController, CanvasDelegate {
             
             //restart 
             self.blueProjectile.position = CGPoint.zero
+            self.blueProjectile.velocity = CGVector.zero
+            self.blueProjectile.acceleration = CGVector(dx: 0, dy: -10)
+            
             self.redProjectile.position = CGPoint.zero
+            self.redProjectile.velocity = CGVector.zero
+            self.redProjectile.acceleration = CGVector(dx: 0, dy: -10)
+            
+            self.redTimer?.invalidate()
+            self.blueTimer?.invalidate()
   
         })
     }
