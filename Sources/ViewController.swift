@@ -3,6 +3,7 @@
 import Cocoa
 
 class ViewController: NSViewController {
+    //
     /// How often to execute an update.
     let updateInterval = 1 / 60 as TimeInterval
 
